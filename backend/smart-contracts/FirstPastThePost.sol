@@ -21,7 +21,7 @@ contract FirstPastThePost is VotingSystem {
     /**
     @dev Calculates the winner under First Past the Post system
     @return winningCandidate Returns an array of the winning candidate(s) 
-    (In case of ties, an array with the frst 10 candidates that tied are returned)
+    (In case of ties, an array with the first 10 candidates with the lowest candidate id's that tied are returned)
      */
     function calculate()
         external
