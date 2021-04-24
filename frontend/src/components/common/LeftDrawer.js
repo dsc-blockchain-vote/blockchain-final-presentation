@@ -8,9 +8,9 @@ import ListItemText from "@material-ui/core/ListItemText";
 import PropTypes from "prop-types";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import AllInboxIcon from "@material-ui/icons/AllInbox";
+import MeetingRoomIcon from "@material-ui/icons/MeetingRoom";
 import CreateIcon from "@material-ui/icons/Create";
 import axios from "axios";
-import Button from "@material-ui/core/Button";
 import { Link, Link as RouterLink } from "react-router-dom";
 import IconButton from "@material-ui/core/IconButton";
 import AccountCircleIcon from "@material-ui/icons/AccountCircle";
@@ -31,6 +31,9 @@ const useStyles = makeStyles((theme) => ({
   },
   drawerPaper: {
     width: drawerWidth,
+  },
+  logout: {
+    marginTop: 290,
   },
   // necessary for content to be below app bar
   toolbar: theme.mixins.toolbar,
@@ -71,7 +74,6 @@ export default function LeftDrawer() {
       }}
       anchor="left"
     >
-      {/* TODO: align logo in toolbar to navbar */}
       <div className={classes.toolbar} />
       {user !== null && (
         <IconButton component={Link} to="/profile">
@@ -98,9 +100,15 @@ export default function LeftDrawer() {
         <Divider />
         {user === null && <ListItemLink to="/login" primary="Login" />}
         {user === null && <ListItemLink to="/signup" primary="Sign Up" />}
-        {user !== null && <Button onClick={logout}>Logout</Button>}
+        {user !== null && (
+          <ListItem button className={classes.logout}>
+            <ListItemIcon>
+              <MeetingRoomIcon />
+            </ListItemIcon>
+            <ListItemText onClick={logout}>Logout</ListItemText>
+          </ListItem>
+        )}
       </List>
-      <Divider />
     </Drawer>
   );
 }
