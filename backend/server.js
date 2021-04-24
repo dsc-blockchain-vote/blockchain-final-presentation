@@ -287,7 +287,7 @@ app.get("/api/election/", verifyUser, async (req, res) => {
       let electionInfo = validElectionData[key];
       let startTime = new Date(electionInfo.startTime).getTime();
       let endTime = new Date(electionInfo.endTime).getTime();
-      if (currDate < startTime) {
+      if (currDate < startTime || !electionInfo.hasOwnProperty("address")) {
         electionData["upcoming"][key] = electionInfo;
       } else if (currDate >= endTime) {
         electionData["previous"][key] = electionInfo;
