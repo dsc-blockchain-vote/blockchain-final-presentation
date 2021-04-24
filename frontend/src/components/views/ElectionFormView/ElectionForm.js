@@ -175,9 +175,7 @@ class ElectionForm extends Component {
   createElection = () => {
     console.log(this.state.errorText)
     if (
-      this.state.title &&
-      this.state.start &&
-      this.state.end &&
+      this.checkForErrors("") &&
       this.checkForErrors("title") &&
       this.checkForErrors("date") &&
       !this.checkForErrors("candidatesEmpty") &&
@@ -214,17 +212,13 @@ class ElectionForm extends Component {
           console.log(error);
         });
     } 
-    else 
-      alert("Check the input fields again for any invalid or empty entry");   
   };
 
   // Edit an election
   // TODO: consider either merging editElection and createElection or splitting editing and creating election forms into two completely different components
   editElection = () => {
     if (
-      this.state.title &&
-      this.state.start &&
-      this.state.end &&
+      this.checkForErrors("") &&
       this.checkForErrors("title") &&
       this.checkForErrors("date") &&
       !this.checkForErrors("candidatesEmpty") &&
@@ -261,16 +255,25 @@ class ElectionForm extends Component {
           console.log(error);
         });
       }
-    else 
-      alert("Check the input fields again for any invalid or empty entry");  
   };
 
   //checks if there are no errors or no empty fields
   checkForErrors = (name) => {
 
+    if(name === ""){
+      if (!this.state.title ||
+        !this.state.start ||
+        !this.state.end){
+          alert("Check the input fields again for any invalid or empty entry"); 
+          return false
+        }
+        return true
+    }
     if(name === "title"){
-      if (this.state.errors.title)
+      if (this.state.errors.title){
+        alert("Check the input fields again for any invalid or empty entry"); 
         return false
+      }
       return true
     }
     if(name === "date"){
@@ -282,29 +285,37 @@ class ElectionForm extends Component {
     }
     if (name === "candidate") {
       for (let i = 0; i < this.state.errors.candidateName.length; i++) {
-        if (this.state.errors.candidateName[i])
-          return false;
+        if (this.state.errors.candidateName[i]){
+          alert("Check the input fields again for any invalid or empty entry"); 
+          return false
+        }
       }
       return true;
     }
     if (name === "voterName") {
       for (let i = 0; i < this.state.errors.voterName.length; i++) {
-        if (this.state.errors.voterName[i])
-          return false;
+        if (this.state.errors.voterName[i]){
+          alert("Check the input fields again for any invalid or empty entry"); 
+          return false
+        }
       }
       return true;
     }
     if (name === "voterID") {
       for (let i = 0; i < this.state.errors.voterID.length; i++) {
-        if (this.state.errors.voterID[i])
-          return false;
+        if (this.state.errors.voterID[i]){
+          alert("Check the input fields again for any invalid or empty entry"); 
+          return false
+        }
       }
       return true;
     }
     if (name === "email") {
       for (let i = 0; i < this.state.errors.email.length; i++) {
-        if (this.state.errors.email[i])
-          return false;
+        if (this.state.errors.email[i]){
+          alert("Check the input fields again for any invalid or empty entry"); 
+          return false
+        }
       }
       return true;
     }
@@ -327,7 +338,6 @@ class ElectionForm extends Component {
     } 
     else if (name === "votersEmpty") {
       if (this.state.voters.length === 0) {
-        this.setState({ errorText: "The voters list cannot be empty" })
         alert("The voters list cannot be empty");
         return true;
       }
