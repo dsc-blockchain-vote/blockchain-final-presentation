@@ -306,6 +306,12 @@ function ElectionButton(props) {
         if (user !== "organizer") {
             return <></>;
         }
+        // If the election is undeployed and the start date has passed, disable the deploy button
+        const now = new Date();
+        let deployable = true;
+        if (props.election.startTime <= now) {
+            deployable = false;
+        }
         return (
             <div>
                 <ButtonGroup
@@ -318,7 +324,7 @@ function ElectionButton(props) {
                         color="primary"
                         onClick={deploy}
                         disabled={
-                            disabled || props.election.deployed || loading
+                            disabled || props.election.deployed || loading || !deployable
                         }
                     >
                         Deploy
