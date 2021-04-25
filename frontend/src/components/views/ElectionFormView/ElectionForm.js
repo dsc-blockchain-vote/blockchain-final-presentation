@@ -9,6 +9,8 @@ import Grid from "@material-ui/core/Grid";
 import parseISO from "date-fns/parseISO";
 import axios from "axios";
 import { CircularProgress } from "@material-ui/core";
+import { Alert } from "@material-ui/lab";
+import { add } from "date-fns";
 
 const emailRegex = RegExp(
   /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/i
@@ -24,8 +26,12 @@ class ElectionForm extends Component {
     super(props);
     this.state = {
       title: "",
-      start: new Date(),
-      end: new Date(),
+      start: add(new Date(),{
+        days: 1
+      }),
+      end: add(new Date(),{
+        days: 1
+      }),
       candidates: [],
       voters: [],
       loading: false,
@@ -116,10 +122,8 @@ class ElectionForm extends Component {
     } else if (name === "voterID") {
       delete errors.voterID[id];
       if (!value) errors.voterID[id] = "Voter ID should not be empty";
-      // else if (!/^[0-9\b]+$/.test(value))
-      //     errors.voterID[id] =
-      //         "Voter ID should only consist of numbers";
-      else if (/^[0-9\b]+$/.test(value)) delete errors.voterID[id];
+      else if (/^[0-9\b]+$/.test(value)) 
+        delete errors.voterID[id];
     } else if (name === "email") {
       delete errors.email[id];
       if (!emailRegex.test(value)) {
@@ -169,18 +173,17 @@ class ElectionForm extends Component {
 
   // Create new election
   createElection = () => {
+    console.log(this.state.errorText)
     if (
-      this.state.errors.title === "" &&
-      this.checkForErrors("candidate") === true &&
-      this.checkForErrors("voterName") === true &&
-      this.checkForErrors("voterID") === true &&
-      this.checkForErrors("email") === true &&
-      this.state.title &&
-      this.state.start &&
-      this.state.end &&
-      this.checkForErrors("candidatesEmpty") === false
-      // &&
-      // this.checkForErrors("votersEmpty") === false
+      this.checkForErrors("") &&
+      this.checkForErrors("title") &&
+      this.checkForErrors("date") &&
+      !this.checkForErrors("candidatesEmpty") &&
+      this.checkForErrors("candidate") &&
+      !this.checkForErrors("votersEmpty") &&
+      this.checkForErrors("voterName") &&
+      this.checkForErrors("voterID") &&
+      this.checkForErrors("email")
     ) {
       const election = {
         electionName: this.state.title,
@@ -208,22 +211,22 @@ class ElectionForm extends Component {
           this.setState({ loading: false });
           console.log(error);
         });
-    } else alert("Check the input fields again for any invalid or empty entry");
+    } 
   };
+
   // Edit an election
   // TODO: consider either merging editElection and createElection or splitting editing and creating election forms into two completely different components
   editElection = () => {
     if (
-      this.state.errors.title === "" &&
-      this.checkForErrors("candidate") === true &&
-      this.checkForErrors("voterName") === true &&
-      this.checkForErrors("voterID") === true &&
-      this.checkForErrors("email") === true &&
-      this.state.title &&
-      this.state.start &&
-      this.state.end &&
-      this.checkForErrors("candidatesEmpty") === false &&
-      this.checkForErrors("votersEmpty") === false
+      this.checkForErrors("") &&
+      this.checkForErrors("title") &&
+      this.checkForErrors("date") &&
+      !this.checkForErrors("candidatesEmpty") &&
+      this.checkForErrors("candidate") &&
+      !this.checkForErrors("votersEmpty") &&
+      this.checkForErrors("voterName") &&
+      this.checkForErrors("voterID") &&
+      this.checkForErrors("email")
     ) {
       const election = {
         electionName: this.state.title,
@@ -251,59 +254,103 @@ class ElectionForm extends Component {
           this.setState({ loading: false });
           console.log(error);
         });
-    } else alert("Check the input fields again for any invalid or empty entry");
+      }
   };
 
   //checks if there are no errors or no empty fields
   checkForErrors = (name) => {
+
+    if(name === ""){
+      if (!this.state.title ||
+        !this.state.start ||
+        !this.state.end){
+          alert("Check the input fields again for any invalid or empty entry"); 
+          return false
+        }
+        return true
+    }
+    if(name === "title"){
+      if (this.state.errors.title){
+        alert("Check the input fields again for any invalid or empty entry"); 
+        return false
+      }
+      return true
+    }
+    if(name === "date"){
+      if (this.state.start >= this.state.end || this.state.end <= this.state.start){
+        alert("The start date should be before the end date");
+        return false
+      }
+      return true
+    }
     if (name === "candidate") {
       for (let i = 0; i < this.state.errors.candidateName.length; i++) {
-        if (!this.state.errors.candidateName[i]) return false;
+        if (this.state.errors.candidateName[i]){
+          alert("Check the input fields again for any invalid or empty entry"); 
+          return false
+        }
       }
       return true;
     }
     if (name === "voterName") {
       for (let i = 0; i < this.state.errors.voterName.length; i++) {
-        console.log(this.state.errors.voterName[i]);
-        if (this.state.errors.voterName[i]) return false;
+        if (this.state.errors.voterName[i]){
+          alert("Check the input fields again for any invalid or empty entry"); 
+          return false
+        }
       }
       return true;
     }
     if (name === "voterID") {
       for (let i = 0; i < this.state.errors.voterID.length; i++) {
-        if (this.state.errors.voterID[i]) return false;
+        if (this.state.errors.voterID[i]){
+          alert("Check the input fields again for any invalid or empty entry"); 
+          return false
+        }
       }
       return true;
     }
     if (name === "email") {
       for (let i = 0; i < this.state.errors.email.length; i++) {
-        if (this.state.errors.email[i]) return false;
+        if (this.state.errors.email[i]){
+          alert("Check the input fields again for any invalid or empty entry"); 
+          return false
+        }
       }
       return true;
     }
     if (name === "candidatesEmpty") {
-      if (this.state.candidates.length === 0) return true;
+      if (this.state.candidates.length === 0){
+        alert("The list of candidates cannot be empty");
+        return true;
+      }
       else {
         for (let i = 0; i < this.state.candidates.length; i++) {
           if (
-            this.state.candidates[i].id === null ||
             this.state.candidates[i].name === ""
-          )
+          ){
+            alert("One or more fields in the candidates section are empty");
             return true;
+          }
         }
         return false;
       }
-    } else if (name === "votersEmpty") {
-      if (this.state.voters.length === 0) return true;
+    } 
+    else if (name === "votersEmpty") {
+      if (this.state.voters.length === 0) {
+        alert("The voters list cannot be empty");
+        return true;
+      }
       else {
         for (let j = 0; j < this.state.voters.length; j++) {
           if (
-            this.state.voters[j].id === null ||
             this.state.voters[j].name === "" ||
             this.state.voters[j].voterID === null ||
             this.state.voters[j].email === ""
-          )
+          ){
+            alert("One or more fields in the voters list section are empty");
             return true;
+          }
         }
         return false;
       }
@@ -409,6 +456,11 @@ class ElectionForm extends Component {
                 errors: this.state.errors,
               }}
             />
+          </Grid>
+          <Grid item xs={12}>
+            <Alert variant="filled" severity="warning">
+              Once you create an election, you must deploy it, for that election to be available for voting 
+            </Alert>
           </Grid>
           <Grid item>
             <Button

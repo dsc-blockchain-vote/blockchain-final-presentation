@@ -116,10 +116,17 @@ contract Election {
         returns (string memory winnerName)
     {
         FirstPastThePost countMethod = new FirstPastThePost(candidates);
+        // Winners is an array of winning candidate id's with the winning candidate(s)
+        // The array is padded with zeroes to contain 10 integers.
+        // Excluding the padded zeroes, the array is sorted in ascending order 
+        // if the id at a non zero index is zero, then the previous index contains the last candidate that tied
+        
         uint256[10] memory winners = countMethod.calculate();
         winnerName = string(candidates[winners[0]].name);
         for (uint256 i = 1; i < winners.length; i++) {
             // abi.encodePacked(arg) is an ABI encoding function that concatinates 2 strings together;
+            
+            // if the id at the index is a padded id, then the code has finished iterating through all the candidates
             if (winners[i] == 0 && i != 0) {
                 break;
             }
