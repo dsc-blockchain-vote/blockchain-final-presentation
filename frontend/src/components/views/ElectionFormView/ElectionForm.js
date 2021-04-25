@@ -60,6 +60,11 @@ class ElectionForm extends Component {
   }));
 
   componentDidMount() {
+    const authorized = window.sessionStorage.getItem("authorized");
+
+    // if not authenticated redirect to login
+    if (!authorized) window.location.href = "/login";
+
     if (this.props.edit) {
       this.loading = true;
       this.getData();

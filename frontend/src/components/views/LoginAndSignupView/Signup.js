@@ -50,6 +50,10 @@ export default function Signup() {
   const [disabled, setDisabled] = useState(true);
   const [checked, setChecked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const authorized = window.sessionStorage.getItem("authorized");
+
+  // if already authenticated redirect to elections
+  if (authorized) window.location.href = "/elections";
 
   //function to display the input textbox for the election title and for picking the start and end dates
   const handleInputChange = (e) => {
