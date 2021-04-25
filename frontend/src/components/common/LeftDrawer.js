@@ -33,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
     width: drawerWidth,
   },
   logout: {
-    marginTop: 290,
+    marginTop: "210%"
   },
   // necessary for content to be below app bar
   toolbar: theme.mixins.toolbar,
@@ -97,7 +97,7 @@ export default function LeftDrawer() {
             icon={<CreateIcon />}
           />
         )}
-        <Divider />
+        <Divider/>
         {user === null && <ListItemLink to="/login" primary="Login" />}
         {user === null && <ListItemLink to="/signup" primary="Sign Up" />}
         {user !== null && (
