@@ -283,6 +283,9 @@ function ElectionButton(props) {
             })
             .catch((error) => {
                 setLoading(false);
+                if (error.response.status === 400) {
+                    alert(`An error occured while deploying election ${props.election.electionName}. Make sure you have validated at least 1 voter and try again.`)
+                }
                 if (error.response.status === 401) {
                     window.sessionStorage.clear();
                     window.location.href = "/";
@@ -306,7 +309,7 @@ function ElectionButton(props) {
         if (user !== "organizer") {
             return <></>;
         }
-        
+
         // If the election is undeployed and the start date has passed, disable the deploy button
         const now = new Date();
         let tooltip = "";
