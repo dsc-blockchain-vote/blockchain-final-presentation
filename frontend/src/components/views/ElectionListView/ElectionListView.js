@@ -306,41 +306,55 @@ function ElectionButton(props) {
         if (user !== "organizer") {
             return <></>;
         }
+        
         // If the election is undeployed and the start date has passed, disable the deploy button
         const now = new Date();
+        let tooltip = "";
         let deployable = true;
         if (props.election.startTime <= now) {
             deployable = false;
+            tooltip = "Cannot deploy elections past start date";
         }
+
+        // If the election is already deployed, disable the deploy button
+        if (props.election.deployed) {
+            tooltip = "Election is already deployed";
+        }
+
         return (
             <div>
-                <ButtonGroup
-                    fullWidth
-                    size="large"
-                    style={loading ? { filter: "blur(2px)" } : {}}
-                >
-                    <Button
-                        variant="outlined"
-                        color="primary"
-                        onClick={deploy}
-                        disabled={
-                            disabled || props.election.deployed || loading || !deployable
-                        }
+                <Tooltip title={tooltip}>
+                    <ButtonGroup
+                        fullWidth
+                        size="large"
+                        style={loading ? { filter: "blur(2px)" } : {}}
                     >
-                        Deploy
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        component={Link}
-                        to={{ pathname: link }}
-                        disabled={
-                            disabled || props.election.deployed || loading
-                        }
-                    >
-                        {text}
-                    </Button>
-                </ButtonGroup>
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={deploy}
+                            disabled={
+                                disabled ||
+                                props.election.deployed ||
+                                loading ||
+                                !deployable
+                            }
+                        >
+                            Deploy
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            component={Link}
+                            to={{ pathname: link }}
+                            disabled={
+                                disabled || props.election.deployed || loading
+                            }
+                        >
+                            {text}
+                        </Button>
+                    </ButtonGroup>
+                </Tooltip>
                 {loading && (
                     <CircularProgress
                         size={32}
