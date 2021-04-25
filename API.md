@@ -149,7 +149,8 @@ validate the list of voter IDs
 
 ## `GET /api/election/`
 
-gets all the elections that this organizer which are either ongoing, upcominh or previous
+gets all the elections that this organizer which are either ongoing, upcoming or previous.  
+any election that hasn't been deployed will be part of upcoming election irrespective of that election's start or end time.
 
 ### Request JSON
 
