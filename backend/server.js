@@ -2,14 +2,12 @@
 require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
-const csrf = require("csurf");
 const Web3 = require("web3");
 const cookieParser = require("cookie-parser");
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const admin = require("firebase-admin");
 const serviceAccount = require("./service-account.json");
 const { abi, bytecode } = require("./compile");
-const csrfMiddleWare = csrf({ cookie: true });
 
 // load required environment variables
 const env = process.env.NODE_ENV;
@@ -30,7 +28,7 @@ const db = admin.database();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// use body-parser, cookieParser and csrfMiddlewares for all end points
+// use body-parser, cookieParser for all end points
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -42,19 +40,28 @@ if (env !== "production") {
 }
 
 // helper functions
-// get voter data from blockchain
-const voterData = async (voterAccount, address) => {
-  // Get a connection to the voters account on the blockchain
+
+// set up wallet and connect to network
+const setupBlockchainConnection = (account) => {
+  // Set up the account to be used on the blockchain
   const provider = new HDWalletProvider({
     mnemonic: mnemonic,
     providerOrUrl: URL,
-    addressIndex: voterAccount,
+    addressIndex: account,
     numberOfAddresses: 1,
   });
   // Get a connection to the network with the provided account number
   const web3 = new Web3(provider);
+  return { provider, web3 };
+};
+
+// get voter data from blockchain
+const voterData = async (voterAccount, address) => {
+  const { provider, web3 } = setupBlockchainConnection(voterAccount);
+
   // Get a reference to the conract on the network
   const contract = await new web3.eth.Contract(abi, address);
+
   // Get the voter's information from the network
   const result = await contract.methods.voters(provider.getAddress(0)).call();
   provider.engine.stop();
@@ -110,16 +117,8 @@ const validateVoters = async (
   contractAddress,
   organizerAccount
 ) => {
-  // Get a connection to the organizer's account on the blockchain 
-  const provider = new HDWalletProvider({
-    mnemonic: mnemonic,
-    providerOrUrl: URL,
-    addressIndex: organizerAccount,
-    numberOfAddresses: 1,
-  });
-  // Get a connection to the network with the provided account number
-  const web3 = new Web3(provider);
-  
+  const { provider, web3 } = setupBlockchainConnection(organizerAccount);
+
   // Get a connection to the contract on the network
   const deployedContract = await new web3.eth.Contract(abi, contractAddress);
   let invalidVoterIDs = [];
@@ -130,7 +129,7 @@ const validateVoters = async (
       invalidVoterIDs.push(id);
       continue;
     }
-    // Get a connection to the voter's account on the blockchain 
+    // Get a connection to the voter's account on the blockchain
     let voterProvider = new HDWalletProvider({
       mnemonic: mnemonic,
       providerOrUrl: URL,
@@ -167,13 +166,14 @@ const epochToHuman = (epoch) => {
 
 // verify the user has logged in and check if the user is an organizer
 const verifyUser = (req, res, next) => {
-  // create the session cookie
   const sessionCookie = req.cookies.session || "";
+
+  // check if the session cookie exists
   admin
     .auth()
     .verifySessionCookie(sessionCookie, true)
     .then((decodedClaims) => {
-    // process the claim's data
+      // process the custom claim's data
       if (decodedClaims.isOrganizer === true) {
         req.body.isOrganizer = true;
       } else {
@@ -272,7 +272,7 @@ app.get("/api/election/:electionID", verifyUser, async (req, res) => {
 
 // return all elections
 // if user is organizer, return all data of the elections owned by organizer
-// if user is voter, return all elections for which the user is eligible to vote in. 
+// if user is voter, return all elections for which the user is eligible to vote in.
 // Data for each election returned here contains everything except list of voters
 app.get("/api/election/", verifyUser, async (req, res) => {
   const { userID, isOrganizer } = req.body;
@@ -287,7 +287,7 @@ app.get("/api/election/", verifyUser, async (req, res) => {
     let currDate = new Date(new Date().toISOString()).getTime();
     let validElectionData = {};
     let electionData = { upcoming: {}, previous: {}, ongoing: {} };
-  
+
     if (isOrganizer) {
       // Loop through the elections to get all elections that this organizer is hosting
       for (let key in data) {
@@ -304,13 +304,11 @@ app.get("/api/election/", verifyUser, async (req, res) => {
         res.status(400).send("bad request");
         return;
       }
-      // Loop through the electinos to get all elections that this voter can vote in
+      // Loop through the elections to get all elections that this voter can vote in
       for (let key in data) {
         if (data[key].hasOwnProperty("address")) {
           let temp = await getElectionData(key, isOrganizer);
           let result = await voterData(voterAccount, temp.address);
-          let startTime = new Date(temp.startTime).getTime();
-          let endTime = new Date(temp.endTime).getTime();
           if (result.validVoter) {
             validElectionData[key] = temp;
           }
@@ -355,21 +353,17 @@ app.put("/api/election/:electionID/vote", verifyUser, async (req, res) => {
       res.status(400).send("bad request");
       return;
     }
-    // Get a connection to the voters account on the blockchain
-    const provider = new HDWalletProvider({
-      mnemonic: mnemonic,
-      providerOrUrl: URL,
-      addressIndex: voterAccount,
-      numberOfAddresses: 1,
-    });
-    // Get a connection to the network with the provided account number
-    const web3 = new Web3(provider);
+
+    const { provider, web3 } = setupBlockchainConnection(voterAccount);
+
     // Get a reference to the conract on the network
     const contract = await new web3.eth.Contract(abi, electionDetails.address);
+
     // Tell the contract to vote for the candidate
     const voteTx = await contract.methods
       .vote(candidateID)
       .send({ from: provider.getAddress(0) });
+
     // Send the transaction hash of the vote transaction to front end
     res.send({ "transaction hash": voteTx.transactionHash });
     provider.engine.stop();
@@ -407,7 +401,7 @@ app.put("/api/election/:electionID/validate", verifyUser, async (req, res) => {
     }
     // Get reference to the specific election in the database
     const electionRef = db.ref("elections/" + electionID);
-    // Update the valid voter information in the election 
+    // Update the valid voter information in the election
     await electionRef.update({ validVoters: electionDetails.validVoters });
     res.send({ invalidVoterIDs: invalidVoterIDs });
   } catch (error) {
@@ -446,23 +440,17 @@ app.put("/api/election/:electionID/deploy", verifyUser, async (req, res) => {
       electionData.startTime = allElectionData.startTime;
       electionData.validVoters = allElectionData.validVoters;
     }
-    
+
     // if election does not have the required properties or the organizer does not exist
     if (organizerAccount === null || electionData === {}) {
       res.status(400).send("bad request");
       return;
     }
-    // Get a connection to the voters account on the blockchain
-    const provider = new HDWalletProvider({
-      mnemonic: mnemonic,
-      providerOrUrl: URL,
-      addressIndex: organizerAccount,
-      numberOfAddresses: 1,
-    });
-    // Get a connection to the network with the provided account number
-    const web3 = new Web3(provider);
+    const { provider, web3 } = setupBlockchainConnection(organizerAccount);
+
     // Get a reference to the conract on the network
     const contract = await new web3.eth.Contract(abi);
+
     // Deploy the election onto the blockchain
     const deployTx = await contract
       .deploy({
@@ -474,6 +462,7 @@ app.put("/api/election/:electionID/deploy", verifyUser, async (req, res) => {
         ],
       })
       .send({ from: provider.getAddress(0), gas: 3000000 });
+
     // Get reference to the specific election in the database
     const electionRef = db.ref("elections/" + electionID);
     // Update the elections address information
@@ -489,8 +478,9 @@ app.put("/api/election/:electionID/deploy", verifyUser, async (req, res) => {
       deployTx.options.address,
       organizerAccount
     );
-    
+
     provider.engine.stop();
+
     // Send the election ID, election address, and a list of any invalid voters to the front end
     res.send({
       electionID: electionID,
@@ -507,6 +497,7 @@ app.post("/api/login", async (req, res) => {
   const idToken = req.body.idToken.toString();
   const expiresIn = 59 * 60 * 1000; // session cookie expires in 59 minutes
   let isOrganizer, uid;
+
   // Verify the id token
   await admin
     .auth()
@@ -518,6 +509,7 @@ app.post("/api/login", async (req, res) => {
     .catch((error) => {
       res.end("Unauthorized");
     });
+
   // Create the session cookie
   admin
     .auth()
@@ -548,10 +540,14 @@ app.get("/api/logout", (req, res) => {
 app.post("/api/register", async (req, res) => {
   try {
     const { name, email, password, isOrganizer } = req.body;
+
+    // create new user based on given email and password
     const userRecord = await admin.auth().createUser({
       email: email,
       password: password,
     });
+
+    // set custom claim to mark a user as organizer is that's how they registered
     await admin
       .auth()
       .setCustomUserClaims(userRecord.uid, { isOrganizer: isOrganizer });
@@ -561,6 +557,7 @@ app.post("/api/register", async (req, res) => {
     if (snapshot.val() !== null) {
       acc = snapshot.val().account + 1;
     }
+
     // Get reference to where users are stored in the database and create a new user
     const ref = db.ref("users");
     const currUser = ref.child(userRecord.uid);
@@ -593,7 +590,7 @@ app.put("/api/election/:electionID/update", verifyUser, async (req, res) => {
     validVoters,
   } = req.body;
   try {
-      // Setup the new information to update to
+    // Setup the new information to update to
     const updates = {
       candidates: candidates,
       startTime: humanToEpoch(startTime),
@@ -620,15 +617,9 @@ app.get("/api/election/:electionID/result", verifyUser, async (req, res) => {
       res.status(400).send("bad request");
       return;
     }
-    // Get a connection to the voters account on the blockchain
-    const provider = new HDWalletProvider({
-      mnemonic: mnemonic,
-      providerOrUrl: URL,
-      addressIndex: Account,
-      numberOfAddresses: 1,
-    });
-    // Get a connection to the network with the provided account number
-    const web3 = new Web3(provider);
+
+    const { provider, web3 } = setupBlockchainConnection(Account);
+
     // Get the voter's information from the network
     const contract = await new web3.eth.Contract(abi, electionDetails.address);
 
@@ -636,22 +627,24 @@ app.get("/api/election/:electionID/result", verifyUser, async (req, res) => {
     const numOfCandidates = await contract.methods.numberOfCandidates().call();
     let tempResults = [];
     let numVotes = 0;
+
     // Loop through all candidates and get their information
     for (let i = 0; i < numOfCandidates; i++) {
       let candidate = await contract.methods.candidates(i).call();
       tempResults.push({ name: candidate.name, votes: candidate.voteCount });
       numVotes += parseInt(candidate.voteCount);
     }
+
     // Get the winner of the election
     const winner = await contract.methods.getWinner().call();
-    
-    // Setup return information to send to front end 
+
+    // Setup return information to send to front end
     electionResults["totalVotes"] = numVotes;
     electionResults["results"] = tempResults;
     electionResults["winner"] = winner;
 
     res.send(electionResults);
-    
+
     provider.engine.stop();
   } catch (error) {
     // send appropriate error message to front end
