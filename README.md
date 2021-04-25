@@ -18,7 +18,7 @@ https://docs.google.com/document/d/13X7lTKtGclTqntdPTq1MLEUttlsnWYv8Z6xc_NbXSEs/
 
 ### You can explore a fully functioning version of this project without having to clone this repository at:
 
-### http://dvote.cloudns.cl/
+### http://presentation.dvote.cloudns.cl/
 
 &nbsp;
 
