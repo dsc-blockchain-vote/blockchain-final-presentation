@@ -179,7 +179,7 @@ function ElectionList(props) {
             .catch((error) => {
                 if (error.response.status === 401) {
                     window.sessionStorage.clear();
-                    window.location.href = "/";
+                    window.location.href = "/login";
                 }
                 setLoading(false);
             });
