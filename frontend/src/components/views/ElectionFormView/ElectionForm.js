@@ -60,6 +60,11 @@ class ElectionForm extends Component {
   }));
 
   componentDidMount() {
+    const authorized = window.sessionStorage.getItem("authorized");
+
+    // if not authenticated redirect to login
+    if (!authorized) window.location.href = "/login";
+
     if (this.props.edit) {
       this.loading = true;
       this.getData();
@@ -395,7 +400,7 @@ class ElectionForm extends Component {
           this.setState(data);
         })
         .catch((error) => {
-          console.log(error);
+          window.location.href = "/elections";
         });
     }
   }
