@@ -1,5 +1,6 @@
 import React from "react";
 import { Route, Switch } from "react-router-dom";
+import LandingView from "../views/LandingView/LandingView";
 import BallotView from "../views/BallotView/BallotView";
 import CreateElectionView from "../views/ElectionFormView/CreateElectionView";
 import EditElectionView from "../views/ElectionFormView/EditElectionView";
@@ -13,8 +14,7 @@ import NotFoundView from "../views/NotFoundView/NotFoundView";
 export default function RouteHandler() {
     return (
         <Switch>
-            <Route exact path="/" component={Login} />
-            <Route path="/ballot" component={BallotView} />
+            <Route exact path="/" component={LandingView} />
             <Route path="/login" component={Login} />
             <Route path="/signup" component={Signup} />
             <Route path="/profile" component={Profile} />
