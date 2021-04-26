@@ -100,7 +100,7 @@ export default function LeftDrawer() {
                         icon={<CreateIcon />}
                     />
                 )}
-                
+
                 {user === null && <ListItemLink to="/login" primary="Login" />}
                 {user === null && (
                     <ListItemLink to="/signup" primary="Sign Up" />

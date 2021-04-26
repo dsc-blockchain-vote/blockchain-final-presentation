@@ -464,7 +464,8 @@ class ElectionForm extends Component {
           </Grid>
           <Grid item xs={12}>
             <Alert variant="filled" severity="warning">
-              Once you create an election, you must deploy it, for that election to be available for voting 
+              Once you create an election, you must deploy it in the Upcoming Elections tab,
+               for that election to be available for voting 
             </Alert>
           </Grid>
           <Grid item>
