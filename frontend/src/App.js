@@ -1,8 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import CssBaseline from "@material-ui/core/CssBaseline";
-import LeftDrawer from "./components/common/LeftDrawer";
 import { makeStyles } from "@material-ui/core/styles";
-import NavBar from "./components/common/NavBar";
 import RouteHandler from "./components/router/RouteHandler";
 import { Route, Switch } from "react-router-dom";
 import LandingView from "./components/views/LandingView/LandingView";
@@ -24,7 +22,11 @@ const useStyles = makeStyles((theme) => ({
 
 function App() {
   const classes = useStyles();
-
+  const [user, setUser] = useState(window.sessionStorage.getItem("authorized"));
+  window.onstorage = () => {
+    let val = window.sessionStorage.getItem("authorized");
+    if (val !== null && val !== user) setUser(val);
+  };
   return (
     <div className={classes.root}>
       <CssBaseline />
@@ -33,10 +35,11 @@ function App() {
         <div className={classes.toolbar} />
         {/* Page content goes here */}
         <Switch>
-            <Route exact path="/" component={LandingView}/>
-            <Route path="/login" component={Login} />
-            <Route path="/signup" component={Signup} />
-            <Route path="*" component={RouteHandler}/>
+          <Route exact path="/" component={LandingView} />
+          <Route path="/login" component={Login} />
+          <Route path="/signup" component={Signup} />
+          {!user && <Route path="/" component={LandingView} />}
+          <Route path="*" component={RouteHandler} />
         </Switch>
       </main>
     </div>
