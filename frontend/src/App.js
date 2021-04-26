@@ -4,6 +4,10 @@ import LeftDrawer from "./components/common/LeftDrawer";
 import { makeStyles } from "@material-ui/core/styles";
 import NavBar from "./components/common/NavBar";
 import RouteHandler from "./components/router/RouteHandler";
+import { Route, Switch } from "react-router-dom";
+import LandingView from "./components/views/LandingView/LandingView";
+import Login from "./components/views/LoginAndSignupView/Login";
+import Signup from "./components/views/LoginAndSignupView/Signup";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -24,12 +28,16 @@ function App() {
   return (
     <div className={classes.root}>
       <CssBaseline />
-      <NavBar title="dVote" />
-      <LeftDrawer />
+      {/* <LeftDrawer /> */}
       <main className={classes.content}>
         <div className={classes.toolbar} />
         {/* Page content goes here */}
-        <RouteHandler />
+        <Switch>
+            <Route exact path="/" component={LandingView}/>
+            <Route path="/login" component={Login} />
+            <Route path="/signup" component={Signup} />
+            <Route path="*" component={RouteHandler}/>
+        </Switch>
       </main>
     </div>
   );
