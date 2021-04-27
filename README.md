@@ -90,7 +90,7 @@ $ npm start
 
 The local server is listening on `localhost:5000`
 
-To run just the server, refer to `API.md` on how to use the APIs using Postman or cURL  
+To run just the server, refer to [API.md](./API.md) on how to use the APIs using Postman or cURL  
 Note that since the server interacts with a blockchain, certain actions can take more time to respond since they need to be mined on the blockchain first.
 
 Note: Any interaction with blockchain requires some time. Please be patient
